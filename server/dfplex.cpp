@@ -747,6 +747,13 @@ void dfplex_update()
 
                     if (update_multiplexing(client))
                     {
+                        // make sure we're not following a disconnected user
+                        if (client->ui.m_following_client && client->ui.m_client_screen_cycle && !get_client(client->ui.m_client_screen_cycle.get()))
+                        {
+                            client->ui.m_following_client = false;
+                            client->ui.m_client_screen_cycle = nullptr;
+                        }
+
                         // transfer screen to this client
                         if (!client->ui.m_following_client || !client->ui.m_client_screen_cycle)
                         {
@@ -764,6 +771,10 @@ void dfplex_update()
                             {
                                 restore_size();
                                 set_size(cl->desired_dimx, cl->desired_dimy);
+                                center_view_on_coord(client->ui.m_stored_viewcoord.operator+(
+                                    {client->ui.m_map_dimx/2, client->ui.m_map_dimy/2, 0})
+                                );
+                                Gui::setMenuWidth(cl->ui.m_menu_width, cl->ui.m_area_map_width);
                                 perform_render();
                                 scrape_screenbuf(cl);
                                 transfer_screenbuf_client(cl);
